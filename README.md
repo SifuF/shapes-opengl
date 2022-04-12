@@ -1,2 +1,2 @@
 # shapes-opengl
-OpenGL shapes library
+## OpenGL shapes library
