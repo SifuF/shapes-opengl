@@ -1,4 +1,4 @@
-# shapes-opengl
+# Shapes OpenGL
 OpenGL shapes library for rendering 2D and 3D geometry (spheres, tori, cones, cylinders, arbitrary polynomials, etc.)
 
 ![sphere](img/sphere.gif)
