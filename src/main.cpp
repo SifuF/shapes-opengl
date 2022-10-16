@@ -9,9 +9,9 @@
 #include"glm/glm.hpp"
 #include"glm/gtc/matrix_transform.hpp"
 #include"glm/gtc/type_ptr.hpp"
-#include"Texture.h"
-#include"Shape.h"
-#include"Shader.h"
+#include"Texture.hpp"
+#include"Shape.hpp"
+#include"Shader.hpp"
 
 bool torusDown = false;
 bool torusUp = false;
@@ -46,7 +46,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_P && action == GLFW_RELEASE) {
 		torusUp = false;
 	}
-	
+
 	if (key == GLFW_KEY_O && action == GLFW_PRESS) {
 		torusDown = true;
 	}
@@ -59,7 +59,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 int main()
 {
-
 	srand(time(NULL));
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -83,9 +82,9 @@ int main()
 
 	glViewport(0, 0, windowWidth, windowHeight);
 
-	Shader shader("default.vert", "default.frag");
-	Shader flatShader("flat.vert", "flat.frag");
-	
+	Shader shader("shaders/default.vert", "shaders/default.frag");
+	Shader flatShader("shaders/flat.vert", "shaders/flat.frag");
+
 	Rectangle rectangle(2.0f, 2.0f);
 	Cuboid cube(1.0f, 1.0f, 1.0f);
 	Circle circle(30);
@@ -98,8 +97,8 @@ int main()
 	//PolynomialVolume quadratic(1.0f, 6.0f, -5.0f, -8.0f, 2.0f, 20);
 	Polynomial poly(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, -10.0f, 10.0f, 100, false);
 	//Polynomial quadratic(0.0f, 1.0f, 0.0f, 0.0f, 7.0f, 0.0f, 0.0f, -2.0f, 5.0f, 100, true);
-	
-	
+
+
 
 
 	/////////////////////////////////////////////////
@@ -126,17 +125,17 @@ int main()
 	float rotation = 0.0f;
 	double prevTime = glfwGetTime();
 
-	
+
 
 	while (!glfwWindowShouldClose(window)) {
 
-	
+
 		if (torusUp) { torus.points+=30; }
 
 		if (torusDown) { torus.points-=30; }
 
 
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glUseProgram(shader.program);
 		glUniform1f(uniID, 0.5f);
@@ -150,7 +149,7 @@ int main()
 		}
 
 		//////////////////Identity////////////////////////////////////////////////////
-		glm::mat4 model = glm::mat4(1.0f);		
+		glm::mat4 model = glm::mat4(1.0f);
 		glm::mat4 view = glm::mat4(1.0f);
 		glm::mat4 proj = glm::mat4(1.0f);
 
@@ -159,11 +158,11 @@ int main()
 		GLuint projID = glGetUniformLocation(shader.program, "proj");
 		glUniformMatrix4fv(modelID, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(viewID, 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(projID, 1, GL_FALSE, glm::value_ptr(proj));							
-			
+		glUniformMatrix4fv(projID, 1, GL_FALSE, glm::value_ptr(proj));
+
 			////render area is a unit cube////
-		
-		//circle.draw();					
+
+		//circle.draw();
 		//rectangle.draw();
 		//cube.draw();
 		//cone.draw();
@@ -183,14 +182,14 @@ int main()
 		glUniformMatrix4fv(viewID, 1, GL_FALSE, glm::value_ptr(view));
 
 			////rendered in camera space////
-		
-		//circle.draw();					
+
+		//circle.draw();
 		//rectangle.draw();
 
 		////////////////////Perspective///////////////////////////////////////////////
 		proj = glm::perspective(glm::radians(45.0f), 1080 / float(1080), 0.1f, 100.0f);
 		glUniformMatrix4fv(projID, 1, GL_FALSE, glm::value_ptr(proj));
-			
+
 			////global (static) coordiate system////
 
 		//circle.draw();
@@ -199,23 +198,23 @@ int main()
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		//sphere.draw();
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		
+
 
 		////////////////////Model/////////////////////////////////////////////////////
-			
+
 			////per model transforms////
-		
+
 		glm::mat4 model2 = glm::translate(model, glm::vec3(0.0f, 1.0f, -2.0f));
 		model2 = glm::rotate(model2, glm::radians(rotation), glm::vec3(0.0f, -1.0f, 0.0f));
 		glUniformMatrix4fv(modelID, 1, GL_FALSE, glm::value_ptr(model2));
 		texture1.bind();
 		texture2.bind();
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		sphere.draw();
+		//sphere.draw();
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		texture1.unBind();
 		texture2.unBind();;
-		
+
 		model2 = glm::rotate(model, glm::radians(rotation), glm::vec3(1.0f, 0.0f, 0.0f));
 		model2 = glm::translate(model2, glm::vec3(-1.0f, 0.0f, 0.0f));
 		glUniformMatrix4fv(modelID, 1, GL_FALSE, glm::value_ptr(model2));
@@ -231,8 +230,8 @@ int main()
 		glUniformMatrix4fv(modelID, 1, GL_FALSE, glm::value_ptr(model5));
 		//rectangle.draw();
 
-		
-	
+
+
 
 
 		//////////////////// Flat shader
@@ -243,8 +242,8 @@ int main()
 		glUniformMatrix4fv(modelID2, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(viewID2, 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(projID2, 1, GL_FALSE, glm::value_ptr(proj));
-		
-		
+
+
 		glm::mat4 model3 = glm::mat4(1.0f);
 		model3 = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
 		model3 = glm::rotate(model3, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -253,14 +252,14 @@ int main()
 		//cone.draw();
 		//circle.draw();
 		//cylinder.draw();
-		
+
 
 		glm::mat4 model4 = glm::translate(model, glm::vec3(0.0f, 0.0f, 2.0f));
 		model4 = glm::rotate(model4, glm::radians(rotation*5), glm::vec3(0.0f, 0.0f, 1.0f));
 		model4 = glm::rotate(model4, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
 		glUniformMatrix4fv(modelID2, 1, GL_FALSE, glm::value_ptr(model4));
 		//circle.draw();
-		//torus.draw();
+		torus.draw();
 		//starTorus.draw();
 
 		glfwSwapBuffers(window);

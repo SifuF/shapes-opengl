@@ -4,10 +4,10 @@
 #include<cmath>
 #include <limits>
 
-#include"VAO.h"
-#include"VBO.h"
-#include"EBO.h"
-#include"Texture.h"
+#include"VAO.hpp"
+#include"VBO.hpp"
+#include"EBO.hpp"
+#include"Texture.hpp"
 
 class Shape {
 public:

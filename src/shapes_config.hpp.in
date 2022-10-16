@@ -1,0 +1,2 @@
+#define Shapes_VERSION_MAJOR @Shapes_VERSION_MAJOR@
+#define Shapes_VERSION_MINOR @Shapes_VERSION_MINOR@
