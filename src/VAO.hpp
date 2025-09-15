@@ -6,33 +6,33 @@
 
 class VAO {
 public:
-	VAO()
-	{
-		glGenVertexArrays(1, &buffer);
-	}
+    VAO()
+    {
+        glGenVertexArrays(1, &buffer);
+    }
 
-	void bind() const
-	{
-		glBindVertexArray(buffer);
-	}
+    void bind() const
+    {
+        glBindVertexArray(buffer);
+    }
 
-	void unBind() const
-	{
-		glBindVertexArray(0);
-	}
+    void unBind() const
+    {
+        glBindVertexArray(0);
+    }
 
-	~VAO()
-	{
-		glDeleteVertexArrays(1, &buffer);
-	}
+    ~VAO()
+    {
+        glDeleteVertexArrays(1, &buffer);
+    }
 
-	VAO(const VAO& other) = delete;
-	VAO& operator=(const VAO& other) = delete;
-	VAO(VAO&& other) = delete;
-	VAO& operator=(VAO&& other) = delete;
+    VAO(const VAO& other) = delete;
+    VAO& operator=(const VAO& other) = delete;
+    VAO(VAO&& other) = delete;
+    VAO& operator=(VAO&& other) = delete;
 
 private:
-	GLuint buffer;
+    GLuint buffer;
 };
 
 #endif // VAO_H

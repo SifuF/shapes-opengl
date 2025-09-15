@@ -6,33 +6,33 @@
 
 class VBO {
 public:
-	VBO()
-	{
-		glGenBuffers(1, &buffer);
-	}
+    VBO()
+    {
+        glGenBuffers(1, &buffer);
+    }
 
-	void bind() const
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	}
+    void bind() const
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    }
 
-	void unBind() const
-	{ 
-		glBindBuffer(GL_ARRAY_BUFFER, 0); 
-	}
+    void unBind() const
+    { 
+        glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    }
 
-	~VBO()
-	{
-		glDeleteBuffers(1, &buffer);
-	}
+    ~VBO()
+    {
+        glDeleteBuffers(1, &buffer);
+    }
 
-	VBO(const VBO& other) = delete;
-	VBO& operator=(const VBO& other) = delete;
-	VBO(VBO&& other) = delete;
-	VBO& operator=(VBO&& other) = delete;
+    VBO(const VBO& other) = delete;
+    VBO& operator=(const VBO& other) = delete;
+    VBO(VBO&& other) = delete;
+    VBO& operator=(VBO&& other) = delete;
 
 private:
-	GLuint buffer;
+    GLuint buffer;
 };
 
 #endif // VBO_H
