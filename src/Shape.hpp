@@ -1,10 +1,10 @@
 #ifndef SHAPE_H
 #define SHAPE_H
 
-#include"VAO.hpp"
-#include"VBO.hpp"
-#include"EBO.hpp"
-#include"Texture.hpp"
+#include "VAO.hpp"
+#include "VBO.hpp"
+#include "EBO.hpp"
+#include "Texture.hpp"
 
 #include <cmath>
 #include <limits>
@@ -14,17 +14,17 @@
 class Shape
 {
 public:
-    void drawShapeArrays(int prim) const 
+    void drawShapeArrays() const 
     {
         bind();
-        glDrawArrays(prim, 0, vertices.size());
+        glDrawArrays(primitive, 0, vertices.size());
         unBind();
     }
 
-    void drawShapeElements(int prim) const 
+    void drawShapeElements() const 
     {
         bind();
-        glDrawElements(prim, indices.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements(primitive, indices.size(), GL_UNSIGNED_INT, 0);
         unBind();
     }
 
@@ -49,7 +49,7 @@ public:
         vao.bind();
         vbo.bind();
         ebo.bind();
-        }
+    }
 
     void unBind() const
     {
@@ -60,7 +60,7 @@ public:
         // This does not apply to the VBO because the VBO is already linked to the VAO during glVertexAttribPointer
     }
 
-protected:
+public:
     Shape() = default;
 
     std::vector<GLfloat> vertices;
@@ -85,6 +85,7 @@ public:
             0.0f, 0.0f, r,      0.0f, 0.0f, 1.0f,      1.0f, 1.0f,      0.0f, 0.0f, 1.0f,       //  0-----1
         };
 
+        primitive = GL_LINES;
         indices = {
             0, 1,
             0, 2,
@@ -96,7 +97,7 @@ public:
 
     void draw() const
     {
-        drawShapeElements(GL_LINES);
+        drawShapeElements();
     }
 };
 
@@ -123,7 +124,7 @@ public:
 
     void draw() const
     {
-        drawShapeElements(primitive);
+        drawShapeElements();
     }
 };
 
@@ -178,7 +179,7 @@ public:
 
     void draw()
     {
-        drawShapeElements(primitive);
+        drawShapeElements();
     }
 };
 
@@ -225,7 +226,7 @@ public:
 
     void draw() const
     {
-        drawShapeElements(primitive);
+        drawShapeElements();
     }
 };
 
@@ -387,7 +388,7 @@ public:
 
     void draw() const 
     {
-        drawShapeElements(primitive);
+        drawShapeElements();
     }
 };
 
@@ -445,8 +446,7 @@ public:
         }
 
         primitive = GL_LINES;
-        indices.resize(2 * n);
-        //points = indices.size() - 1;
+        indices.resize(2 * n);  // points = indices.size() - 1;
         int k = 0;
         for (int i = 0; i < indices.size() - 1; i+=2) {
             indices[i] = k;
@@ -459,7 +459,7 @@ public:
 
     void draw() const
     {
-        drawShapeElements(primitive);
+        drawShapeElements();
     }
 };
 
@@ -522,7 +522,7 @@ public:
 
     void draw() const 
     {
-        drawShapeElements(primitive);
+        drawShapeElements();
     }
 };
 
@@ -580,7 +580,7 @@ public:
 
     void draw() const
     {
-        drawShapeElements(primitive);
+        drawShapeElements();
     }
 };
 
@@ -664,7 +664,7 @@ public:
 
     void draw() const
     {
-        drawShapeElements(primitive);
+        drawShapeElements();
     }
 };
 
@@ -729,7 +729,7 @@ public:
 
     void draw() const
     {
-        drawShapeElements(primitive);
+        drawShapeElements();
     }
 };
 

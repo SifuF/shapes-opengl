@@ -1,8 +1,8 @@
 #ifndef EBO_H
 #define EBO_H
 
-#include<glad/glad.h>
-#include<GLFW/glfw3.h>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 class EBO {
 public:
