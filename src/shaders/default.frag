@@ -16,12 +16,9 @@ uniform float mixer;
 void main() {
     vec3 norm = normalize(vec3(texCoord, 1.0f));
     vec3 lightDirection = normalize(vec3(16.0f, 16.0f, 16.0f));
-
     float diffuse = max(dot(currentPos, lightDirection), 0.0f);
 
+    //FragColor = vec4(color, 1.0f);
     //FragColor = (mix(texture(tex0, texCoord), texture(tex1, texCoord), mixer) + vec4(color, 1.0f))*diffuse;
     FragColor = (mix(texture(tex0, texCoord), texture(tex1, texCoord), mixer) + vec4(color, 1.0f));
-
-    //FragColor = vec4(color, 1.0f);
-
 }

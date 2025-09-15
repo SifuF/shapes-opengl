@@ -101,7 +101,6 @@ public:
     }
 };
 
-
 class Rectangle : public Shape 
 {
 public:
@@ -583,7 +582,6 @@ public:
         drawShapeElements();
     }
 };
-
 
 class Torus : public Shape
 {
