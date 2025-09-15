@@ -253,13 +253,13 @@ int main()
 		model4 = glm::rotate(model4, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
 		glUniformMatrix4fv(modelID2, 1, GL_FALSE, glm::value_ptr(model4));
 		//circle.draw();
-		//torus.draw();
-		starTorus.draw();
+		torus.draw();
+		//starTorus.draw();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 
-		if(mix > 1.0) forward = false;
+		if (mix > 1.0) forward = false;
 		if (mix < 0.0) forward = true;
 
 		if (forward) {
