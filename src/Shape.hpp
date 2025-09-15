@@ -1,57 +1,36 @@
 #ifndef SHAPE_H
 #define SHAPE_H
 
-#include<cmath>
-#include <limits>
-
 #include"VAO.hpp"
 #include"VBO.hpp"
 #include"EBO.hpp"
 #include"Texture.hpp"
 
-class Shape {
+#include <cmath>
+#include <limits>
+
+class Shape
+{
 public:
-	GLfloat* data;
-	GLuint* indices;
-	int size;
-	int sizeInd;
-	int points;
-	VAO vao;
-	VBO vbo;
-	EBO ebo;
-	int primitive;
-	int attribCount;
-	//Texture *texture;
-
-	Shape() : data(nullptr), indices(nullptr), size(0), sizeInd(0), points(0), primitive(GL_TRIANGLES), attribCount(11) {}
-
-	void drawShapeArrays(int prim) {
-		vao.bind();
-		vbo.bind();
-		ebo.bind();
+	void drawShapeArrays(int prim) const 
+	{
+		bind();
 		glDrawArrays(prim, 0, points);
-		vbo.unBind();
-		vao.unBind();
-		ebo.unBind();
-	};
+		unBind();
+	}
 
-	void drawShapeElements(int prim) {
-		vao.bind();
-		vbo.bind();
-		ebo.bind();
+	void drawShapeElements(int prim) const 
+	{
+		bind();
 		glDrawElements(prim, points, GL_UNSIGNED_INT, 0);
-		vbo.unBind();
-		vao.unBind();
-		ebo.unBind();
-	};
+		unBind();
+	}
 
-	void layout() {
-		vao.bind();
-		vbo.bind();
+	void layout() const
+	{
+		bind();
 		glBufferData(GL_ARRAY_BUFFER, 4 * size, data, GL_STATIC_DRAW);
-		ebo.bind();
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeInd, indices, GL_STATIC_DRAW);
-
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, attribCount * sizeof(float), (void*)0);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, attribCount * sizeof(float), (void*)(3 * sizeof(float)));
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, attribCount * sizeof(float), (void*)(6 * sizeof(float)));
@@ -60,20 +39,40 @@ public:
 		glEnableVertexAttribArray(1);
 		glEnableVertexAttribArray(2);
 		glEnableVertexAttribArray(3);
+		unBind();
+	}
 
+	void bind() const
+	{
+		vao.bind();
+		vbo.bind();
+		ebo.bind();
+	}
+
+	void unBind() const
+	{
 		vbo.unBind();
 		vao.unBind();
 		ebo.unBind();
-
 		// Bind the EBO to 0 so that we don't accidentally modify it
 		// MAKE SURE TO UNBIND IT AFTER UNBINDING THE VAO, as the EBO is linked in the VAO
 		// This does not apply to the VBO because the VBO is already linked to the VAO during glVertexAttribPointer
 	}
 
-	~Shape() {
-		
-	}
+protected:
+	Shape() = default;
 
+	GLfloat* data = nullptr;
+	GLuint* indices = nullptr;
+	int size{};
+	int sizeInd{};
+	int points{};
+	VAO vao;
+	VBO vbo;
+	EBO ebo;
+	int primitive{GL_TRIANGLES};
+	int attribCount{11};
+	//Texture *texture;
 };
 
 class CoordinateAxes : public Shape {
@@ -975,4 +974,4 @@ struct StarTorus : public Shape {
 
 };
 
-#endif
+#endif // SHAPE_H

@@ -6,19 +6,33 @@
 
 class EBO {
 public:
-	GLuint buffer;
-
-	EBO() {
+	EBO()
+	{
 		glGenBuffers(1, &buffer);
 	}
 
-	void bind() { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer); }
+	void bind() const
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer);
+	}
 
-	void unBind() { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); }
+	void unBind() const
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
 
-	~EBO() {
+	~EBO()
+	{
 		glDeleteBuffers(1, &buffer);
 	}
+
+	EBO(const EBO& other) = delete;
+	EBO& operator=(const EBO& other) = delete;
+	EBO(EBO&& other) = delete;
+	EBO& operator=(EBO&& other) = delete;
+
+private:
+	GLuint buffer;
 };
 
-#endif
+#endif // EBO_H
