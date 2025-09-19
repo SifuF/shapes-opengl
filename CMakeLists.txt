@@ -13,7 +13,7 @@ set(SOURCES
 set(HEADERS
     src/EBO.hpp
     src/Shader.hpp
-    src/Shape.hpp
+    src/ShapeMesh.hpp
     src/Texture.hpp
     src/VAO.hpp
     src/VBO.hpp

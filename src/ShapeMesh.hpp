@@ -1,5 +1,5 @@
-#ifndef SHAPE_H
-#define SHAPE_H
+#ifndef SHAPEMESH_H
+#define SHAPEMESH_H
 
 #include "VAO.hpp"
 #include "VBO.hpp"
@@ -11,28 +11,26 @@
 #include <numbers>
 #include <vector>
 
-class Shape
+class ShapeMesh
 {
 public:
-    void drawShapeArrays() const 
+    void draw() const
     {
         bind();
-        glDrawArrays(primitive, 0, vertices.size());
-        unBind();
-    }
-
-    void drawShapeElements() const 
-    {
-        bind();
-        glDrawElements(primitive, indices.size(), GL_UNSIGNED_INT, 0);
+        if (!indices.empty()) {
+            glDrawElements(primitive, indices.size(), GL_UNSIGNED_INT, 0);
+        }
+        else {
+            glDrawArrays(primitive, 0, vertices.size());
+        }
         unBind();
     }
 
     void setLayout() const
     {
         bind();
-        glBufferData(GL_ARRAY_BUFFER, 4 * vertices.size(), vertices.data(), GL_STATIC_DRAW);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * indices.size(), indices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, attribCount * sizeof(float), (void*)0);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, attribCount * sizeof(float), (void*)(3 * sizeof(float)));
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, attribCount * sizeof(float), (void*)(6 * sizeof(float)));
@@ -61,7 +59,7 @@ public:
     }
 
 public:
-    Shape() = default;
+    ShapeMesh() = default;
 
     std::vector<GLfloat> vertices;
     std::vector<GLuint> indices;
@@ -69,13 +67,13 @@ public:
     VBO vbo;
     EBO ebo;
     int primitive{GL_TRIANGLES};
-    int attribCount{11}; // 11 == 3pos + 3col + 2tex + 3 norm
+    static constexpr int attribCount = 11; // 11 == 3pos + 3col + 2tex + 3 norm
 };
 
-class CoordinateAxes : public Shape
+class CoordinateAxesMesh : public ShapeMesh
 {
 public:
-    CoordinateAxes()
+    CoordinateAxesMesh()
     {
         GLfloat r = 10.0f;
         vertices = {
@@ -94,17 +92,12 @@ public:
 
         setLayout();
     }
-
-    void draw() const
-    {
-        drawShapeElements();
-    }
 };
 
-class Rectangle : public Shape 
+class RectangleMesh : public ShapeMesh
 {
 public:
-    Rectangle(GLfloat height, GLfloat width) 
+    RectangleMesh(GLfloat height, GLfloat width)
     {
         vertices = {
             -width / 2.0f, height / 2.0f, 0.0f,      1.0f, 0.0f, 0.0f,      0.0f, 1.0f,      0.0f, 0.0f, 1.0f,
@@ -120,17 +113,12 @@ public:
 
         setLayout();
     }
-
-    void draw() const
-    {
-        drawShapeElements();
-    }
 };
 
-class Cuboid : public Shape
+class CuboidMesh : public ShapeMesh
 {
 public:
-    Cuboid( GLfloat width, GLfloat height, GLfloat depth)
+    CuboidMesh( GLfloat width, GLfloat height, GLfloat depth)
     {
         vertices = {
             -width / 2.0f, height / 2.0f, depth / 2.0f,     1.0f, 0.0f, 0.0f,       0.0f, 1.0f,      0.0f, 0.0f, 1.0f, //front 0
@@ -175,17 +163,12 @@ public:
 
         setLayout();
     }
-
-    void draw()
-    {
-        drawShapeElements();
-    }
 };
 
-class Circle : public Shape
+class CircleMesh : public ShapeMesh
 {
 public:
-    Circle(int n, float r = 1.0f)
+    CircleMesh(int n, float r = 1.0f)
     {
         // n steps requires n+1 verts including middle
         vertices = { 0.0f, 0.0f, 0.0f,    0.0f, 1.0f, 0.0f,   0.5f, 0.5f,   0.0f, 0.0f, -1.0f }; // middle vertex
@@ -222,17 +205,12 @@ public:
 
         setLayout();
     }
-
-    void draw() const
-    {
-        drawShapeElements();
-    }
 };
 
-class Cylinder : public Shape
+class CylinderMesh : public ShapeMesh
 {
 public:
-    Cylinder(int n, float r = 0.8f)
+    CylinderMesh(int n, float r = 0.8f)
     {
         // n steps requires n+1 verts including middle
         vertices.resize(attribCount * (n + 1) * 2);
@@ -384,18 +362,13 @@ public:
 
         setLayout();
     }
-
-    void draw() const 
-    {
-        drawShapeElements();
-    }
 };
 
-class Polynomial : public Shape
+class PolynomialMesh : public ShapeMesh
 {
 public:
     // ax^4 + bx^3 + cx^2 + dx + e + r/x + s/x^2    // low < x < high    // n points    // given in y^2
-    Polynomial(float a, float b, float c, float d, float e, float r, float s, float low, float high, int n, bool ySquared)
+    PolynomialMesh(float a, float b, float c, float d, float e, float r, float s, float low, float high, int n, bool ySquared)
     {
         float dx = (high - low) / float(n-1);
         vertices.resize(attribCount * n);
@@ -455,17 +428,12 @@ public:
 
         setLayout();
     }
-
-    void draw() const
-    {
-        drawShapeElements();
-    }
 };
 
-class Cone : public Shape
+class ConeMesh : public ShapeMesh
 {
 public:
-    Cone(int n, float r = 1.0f)
+    ConeMesh(int n, float r = 1.0f)
     {
         //n steps requires n+2 verts including both middles
         vertices.resize(attribCount * (n + 2));
@@ -518,17 +486,12 @@ public:
 
         setLayout();
     }
-
-    void draw() const 
-    {
-        drawShapeElements();
-    }
 };
 
-class Sphere : public Shape
+class SphereMesh : public ShapeMesh
 {
 public:
-    Sphere(int n, float r = 1.0f) 
+    SphereMesh(int n, float r = 1.0f)
     {
         // n verts for the circle (no middle)
         // times m+1 for the sphere
@@ -576,17 +539,12 @@ public:
 
         setLayout();
     }
-
-    void draw() const
-    {
-        drawShapeElements();
-    }
 };
 
-class Torus : public Shape
+class TorusMesh : public ShapeMesh
 {
 public:
-    Torus(int n, float R = 0.5f) {
+    TorusMesh(int n, float R = 0.5f) {
         int m = n;
         float r = R / 2;
         vertices.resize(n * m * attribCount);
@@ -659,17 +617,12 @@ public:
 
         setLayout();
     }
-
-    void draw() const
-    {
-        drawShapeElements();
-    }
 };
 
-class StarTorus : public Shape
+class StarTorusMesh : public ShapeMesh
 {
 public:
-    StarTorus(int n, float R = 0.5f) {
+    StarTorusMesh(int n, float R = 0.5f) {
         int m = n;
         float r = R / 2;
         vertices.resize( n * m * attribCount);
@@ -724,11 +677,6 @@ public:
 
         setLayout();
     }
-
-    void draw() const
-    {
-        drawShapeElements();
-    }
 };
 
-#endif // SHAPE_H
+#endif // SHAPEMESH_H

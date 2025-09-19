@@ -1,6 +1,7 @@
 #ifndef SHADER_H
 #define SHADER_H
 
+#include <charconv>
 #include <fstream>
 #include <stdexcept>
 #include <string>
@@ -38,7 +39,45 @@ public:
         glDeleteProgram(program);
     }
 
-    GLuint getProgram() const { return program; }
+    void use() const {
+        glUseProgram(program);
+    }
+
+    void setModel(const glm::mat4& model) const {
+        const GLuint location = glGetUniformLocation(program, "model");
+        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(model));
+    }
+
+    void setView(const glm::mat4& view) const {
+        const GLuint location = glGetUniformLocation(program, "view");
+        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(view));
+    }
+
+    void setProjection(const glm::mat4& projection) const {
+        const GLuint location = glGetUniformLocation(program, "proj");
+        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(projection));
+    }
+
+    void setTexture(GLuint textureUnit) {
+        assert(textureUnit < 32);
+        const std::string str = "tex" + std::to_string(textureUnit);
+        const GLuint location = glGetUniformLocation(program, str.c_str());
+        if (location == -1) {
+            throw std::runtime_error("Warning: Texture uniform not found in shader.\n");
+        }
+        glUniform1i(location, textureUnit);
+    }
+
+    // debug
+    void setScale(GLfloat val) const {
+        GLuint location = glGetUniformLocation(program, "scale");
+        glUniform1f(location, val);
+    }
+
+    void setMixer(GLfloat val) const {
+        GLuint uniMixer = glGetUniformLocation(program, "mixer");
+        glUniform1f(uniMixer, val);
+    }
 
     std::string get_file_contents(const char* filename) const
     {
