@@ -12,6 +12,7 @@ set(SOURCES
 
 set(HEADERS
     src/EBO.hpp
+    src/MatrixStack.hpp
     src/Shader.hpp
     src/ShapeMesh.hpp
     src/Texture.hpp

@@ -5,6 +5,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+#include "MatrixStack.hpp"
 #include "Texture.hpp"
 #include "ShapeMesh.hpp"
 #include "Shader.hpp"
@@ -121,9 +122,10 @@ int main()
     auto torus = std::make_shared<TorusMesh>(40);
     auto starTorus = std::make_shared<StarTorusMesh>(20);
     auto axes = std::make_shared<CoordinateAxesMesh>();
-    //PolynomialVolume quadratic(1.0f, 6.0f, -5.0f, -8.0f, 2.0f, 20);
     auto poly = std::make_shared<PolynomialMesh>(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, -10.0f, 10.0f, 100, false);
-    //Polynomial quadratic(0.0f, 1.0f, 0.0f, 0.0f, 7.0f, 0.0f, 0.0f, -2.0f, 5.0f, 100, true);
+    auto quadratic = std::make_shared<PolynomialMesh>(0.0f, 1.0f, 0.0f, 0.0f, 7.0f, 0.0f, 0.0f, -2.0f, 5.0f, 100, true);
+
+    MatrixStack matrix;
 
     Texture texture1("textures/photo1.jpg", GL_TEXTURE0);
     Texture texture2("textures/photo2.jpg", GL_TEXTURE1);
@@ -155,52 +157,34 @@ int main()
             prevTime = crntTime;
         }
 
-        //////////////////Identity - render area is a unit cube////////////////////////
-        glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 view = glm::mat4(1.0f);
-        glm::mat4 projection = glm::mat4(1.0f);
+        // Identity - render area is a unit cube
         shader.use();
-        shader.setModel(model);
-        shader.setView(view);
-        shader.setProjection(projection);
-
+        shader.setModel(glm::mat4(1.0f));
+        shader.setView(glm::mat4(1.0f));
+        shader.setProjection(glm::mat4(1.0f));
         //circle->draw();
-        //rectangle->draw();
-        //cube->draw();
-        //cone->draw();
-        //cylinder->draw();
-        //sphere->draw();
-        //starTorus->draw();
-        //torus->draw();
-        //axes->draw();
-        //poly->draw();
 
-        ///////////////////Camera - rendered in camera space/////////////////////////
+        // Camera - rendered in camera space
         glm::vec3 position = glm::vec3(camX, camY, camZ);
         glm::vec3 orientation = glm::vec3(0.0f, 0.0f, -1.0f);
         glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-        //view = glm::lookAt(position, position + orientation, up);
-        view = glm::lookAt(position, glm::vec3(0.0f), up);
+        //glm::mat4 view = glm::lookAt(position, position + orientation, up);
+        glm::mat4 view = glm::lookAt(position, glm::vec3(0.0f), up);
         shader.setView(view);
-
         //circle->draw();
-        //rectangle->draw();
 
-        ////////////////////Perspective - global coordiate system///////////////////
-        projection = glm::perspective(glm::radians(45.0f), 1080 / float(1080), 0.1f, 100.0f);
+        //Perspective - global coordiate system
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1080 / float(1080), 0.1f, 100.0f);
         shader.setProjection(projection);
-
         //circle->draw();
-        //axes->draw();
-        //poly->draw();
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         //sphere->draw();
         //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        ////////////////////Model - per model transforms////////////////////////////
-        glm::mat4 model2 = glm::translate(model, glm::vec3(0.0f, 1.0f, -2.0f));
-        model2 = glm::rotate(model2, glm::radians(rotation), glm::vec3(0.0f, -1.0f, 0.0f));
-        shader.setModel(model2);
+        // Model - per model transforms
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, -2.0f));
+        model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, -1.0f, 0.0f));
+        shader.setModel(model);
         texture1.bind();
         texture2.bind();
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -209,42 +193,24 @@ int main()
         texture1.unBind();
         texture2.unBind();
 
-        model2 = glm::rotate(model, glm::radians(rotation), glm::vec3(1.0f, 0.0f, 0.0f));
-        model2 = glm::translate(model2, glm::vec3(-1.0f, 0.0f, 0.0f));
-        shader.setModel(model2);
-        //starTorus->draw();
+        model = glm::rotate(glm::mat4(1.0f), glm::radians(rotation*2), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::translate(model, glm::vec3(1.5f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+        shader.setModel(model);
+        cube->draw();
 
-        model2 = glm::rotate(model, glm::radians(rotation*2), glm::vec3(0.0f, 1.0f, 0.0f));
-        model2 = glm::translate(model2, glm::vec3(3.0f, 2.0f, 0.0f));
-        shader.setModel(model2);
-        //cube->draw();
-
-        glm::mat4 model5 = glm::translate(model, glm::vec3(-2.0f, 1.5f, 1.0f));
-        model5 = glm::rotate(model5, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
-        shader.setModel(model5);
-        //rectangle->draw();
-
-        //////////////////// Flat shader
         flatShader.use();
         flatShader.setView(view);
         flatShader.setProjection(projection);
-
-        glm::mat4 model3 = glm::mat4(1.0f);
-        model3 = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-        model3 = glm::rotate(model3, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
-        flatShader.setModel(model3);
-        //sphere->draw();
-        //cone->draw();
-        //circle->draw();
-        //cylinder->draw();
-
-        glm::mat4 model4 = glm::translate(model, glm::vec3(0.0f, 0.0f, 2.0f));
-        model4 = glm::rotate(model4, glm::radians(rotation*5), glm::vec3(0.0f, 0.0f, 1.0f));
-        model4 = glm::rotate(model4, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
-        flatShader.setModel(model4);
-        //circle->draw();
+        glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(4.0f, 4.0f, -10.0f));
+        glm::mat4 R = glm::rotate(glm::mat4(1.0f), glm::radians(rotation * 5), glm::vec3(0.0f, 0.0f, 1.0f));
+        flatShader.setModel(T * R);
         torus->draw();
-        //starTorus->draw();
+
+        glm::mat4 T2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+        glm::mat4 R2 = glm::rotate(glm::mat4(1.0f), glm::radians(-rotation * 3), glm::vec3(0.0f, 1.0f, 1.0f));
+        flatShader.setModel(T2 * R2);
+        sphere->draw();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
