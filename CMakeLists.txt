@@ -5,9 +5,11 @@ project(Shapes VERSION 1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+add_subdirectory("${CMAKE_SOURCE_DIR}/submodules/glfw")
+
 set(SOURCES
     src/main.cpp
-    thirdparty/src/glad.c
+    thirdparty/glad/glad.c
 )
 
 set(HEADERS
@@ -23,15 +25,13 @@ set(HEADERS
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC
-    "${PROJECT_SOURCE_DIR}/thirdparty/include"
-)
-
-target_link_directories(${CMAKE_PROJECT_NAME} PUBLIC
-    "${PROJECT_SOURCE_DIR}/thirdparty/lib"
+    "${CMAKE_SOURCE_DIR}/submodules/glm"
+    "${CMAKE_SOURCE_DIR}/submodules/stb"
+    "${CMAKE_SOURCE_DIR}/thirdparty"
 )
 
 target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC
-    glfw3    
+    glfw
     opengl32
 )
 
