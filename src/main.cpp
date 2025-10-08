@@ -15,9 +15,6 @@
 #include <ctime>
 #include <cmath>
 
-bool torusDown = false;
-bool torusUp = false;
-
 float camX = 0.0f;
 float camY = 0.0f;
 float camZ = 5.0f;
@@ -34,55 +31,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
 
-    if (key == GLFW_KEY_UP && action == GLFW_PRESS)
-    {
-        camY += 1.0;
-    }
-    
-    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
-    {
-        camY -= 1.0;
-    }
-
-    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
-    {
-        camX -= 1.0;
-    }
-
-    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
-    {
-        camX += 1.0;
-    }
-
-    if (key == GLFW_KEY_Z && action == GLFW_PRESS)
-    {
-        camZ -= 1.0;
-    }
-
-    if (key == GLFW_KEY_X && action == GLFW_PRESS)
-    {
-        camZ += 1.0;
-    }
-
-    if (key == GLFW_KEY_P && action == GLFW_PRESS)
-    {
-        torusUp = true;
-    }
-
-    if (key == GLFW_KEY_P && action == GLFW_RELEASE) 
-    {
-        torusUp = false;
-    }
-
-    if (key == GLFW_KEY_O && action == GLFW_PRESS) 
-    {
-        torusDown = true;
-    }
-
-    if (key == GLFW_KEY_O && action == GLFW_RELEASE) 
-    {
-        torusDown = false;
-    }
+    if (key == GLFW_KEY_UP && action == GLFW_PRESS) { camY += 1.0; }
+    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) { camY -= 1.0; }
+    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) { camX -= 1.0; }
+    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) { camX += 1.0; }
+    if (key == GLFW_KEY_Z && action == GLFW_PRESS) { camZ -= 1.0; }
+    if (key == GLFW_KEY_X && action == GLFW_PRESS) { camZ += 1.0; }
 }
 
 int main()
@@ -110,8 +64,8 @@ int main()
 
     gladLoadGL();
 
-    Shader shader("shaders/default.vert", "shaders/default.frag");
-    Shader flatShader("shaders/flat.vert", "shaders/flat.frag");
+    Shader shader("../src/shaders/default.vert", "../src/shaders/default.frag");
+    Shader flatShader("../src/shaders/flat.vert", "../src/shaders/flat.frag");
 
     auto rectangle = std::make_shared<RectangleMesh>(2.0f, 2.0f);
     auto cube = std::make_shared<CuboidMesh>(1.0f, 1.0f, 1.0f);
@@ -119,7 +73,7 @@ int main()
     auto cone = std::make_shared<ConeMesh>(20);
     auto cylinder = std::make_shared<CylinderMesh>(40);
     auto sphere = std::make_shared<SphereMesh>(20);
-    auto torus = std::make_shared<TorusMesh>(40);
+    auto torus = std::make_shared<TorusMesh>(15);
     auto starTorus = std::make_shared<StarTorusMesh>(20);
     auto axes = std::make_shared<CoordinateAxesMesh>();
     auto poly = std::make_shared<PolynomialMesh>(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, -10.0f, 10.0f, 100, false);
@@ -127,8 +81,8 @@ int main()
 
     MatrixStack matrix;
 
-    Texture texture1("textures/photo1.jpg", GL_TEXTURE0);
-    Texture texture2("textures/photo2.jpg", GL_TEXTURE1);
+    Texture texture1("../src/textures/photo1.jpg", GL_TEXTURE0);
+    Texture texture2("../src/textures/photo2.jpg", GL_TEXTURE1);
 
     shader.use();
     shader.setTexture(0);
@@ -136,8 +90,6 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
 
-    float mix = 0.0f;
-    bool forward = true;
     float rotation = 0.0f;
     double prevTime = glfwGetTime();
 
@@ -149,7 +101,7 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shader.setScale(0.5f); // debug
-        shader.setMixer(mix); // debug
+        shader.setMixer(0.0f); // debug
         
         double crntTime = glfwGetTime();
         if (crntTime - prevTime >= 1 / 60) {
@@ -164,32 +116,28 @@ int main()
         shader.setProjection(glm::mat4(1.0f));
         //circle->draw();
 
-        // Camera - rendered in camera space
-        glm::vec3 position = glm::vec3(camX, camY, camZ);
-        glm::vec3 orientation = glm::vec3(0.0f, 0.0f, -1.0f);
-        glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-        //glm::mat4 view = glm::lookAt(position, position + orientation, up);
-        glm::mat4 view = glm::lookAt(position, glm::vec3(0.0f), up);
-        shader.setView(view);
-        //circle->draw();
-
         //Perspective - global coordiate system
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1080 / float(1080), 0.1f, 100.0f);
         shader.setProjection(projection);
         //circle->draw();
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        //sphere->draw();
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        // Camera - rendered in camera space
+        glm::vec3 position = glm::vec3(camX, camY, camZ);
+        glm::vec3 orientation = glm::vec3(0.0f, 0.0f, -1.0f);
+        glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+        glm::mat4 view = glm::lookAt(position, glm::vec3(0.0f), up);
+        shader.setView(view);
+        //circle->draw();
 
         // Model - per model transforms
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, -2.0f));
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(-2.5f, -2.5f, -5.0f));
         model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, -1.0f, 0.0f));
         shader.setModel(model);
         texture1.bind();
         texture2.bind();
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        //sphere->draw();
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        shader.setMixer(1.0f);
+        sphere->draw();
+        shader.setMixer(0.0f);
         texture1.unBind();
         texture2.unBind();
 
@@ -202,10 +150,12 @@ int main()
         flatShader.use();
         flatShader.setView(view);
         flatShader.setProjection(projection);
-        glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(4.0f, 4.0f, -10.0f));
+        glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, -4.0f));
         glm::mat4 R = glm::rotate(glm::mat4(1.0f), glm::radians(rotation * 5), glm::vec3(0.0f, 0.0f, 1.0f));
         flatShader.setModel(T * R);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         torus->draw();
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         glm::mat4 T2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
         glm::mat4 R2 = glm::rotate(glm::mat4(1.0f), glm::radians(-rotation * 3), glm::vec3(0.0f, 1.0f, 1.0f));
@@ -214,25 +164,6 @@ int main()
 
         glfwSwapBuffers(window);
         glfwPollEvents();
-
-        if (mix > 1.0)
-        {
-            forward = false;
-        }
-
-        if (mix < 0.0)
-        {
-            forward = true;
-        }
-
-        if (forward)
-        {
-            mix += 0.01f;
-        }
-        else
-        {
-            mix -= 0.01f;
-        }
     }
 
     glfwDestroyWindow(window);

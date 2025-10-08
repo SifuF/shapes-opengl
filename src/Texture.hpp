@@ -1,52 +1,19 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
-#include <stdexcept>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 class Texture
 {
 public:
-    Texture(const char* filename, int texunit) : unit(texunit)
-    {
-        stbi_set_flip_vertically_on_load(true);
-        auto* const bytes = stbi_load(filename, &width, &height, &numColCh, 0);
-        if (!bytes) {
-            throw std::runtime_error("STB failed to allocate image");
-        }
+    Texture(const char* filename, int texunit);
 
-        glGenTextures(1, &texture);
-        glActiveTexture(unit);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, bytes);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, 0);
+    void bind() const;
 
-        stbi_image_free(bytes);
-    }
+    void unBind() const;
 
-    void bind() const
-    {
-        glActiveTexture(unit);
-        glBindTexture(GL_TEXTURE_2D, texture);
-    }
-
-    void unBind() const
-    {
-        glActiveTexture(unit);
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
-    ~Texture()
-    {
-        glDeleteTextures(1, &texture);
-    }
+    ~Texture();
 
     Texture(const Texture& other) = delete;
     Texture& operator=(const Texture& other) = delete;

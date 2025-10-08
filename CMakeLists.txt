@@ -9,6 +9,9 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/submodules/glfw")
 
 set(SOURCES
     src/main.cpp
+    src/Shader.cpp
+    src/ShapeMesh.cpp
+    src/Texture.cpp
     thirdparty/glad/glad.c
 )
 
@@ -34,6 +37,3 @@ target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC
     glfw
     opengl32
 )
-
-file(COPY ${PROJECT_SOURCE_DIR}/src/shaders/ DESTINATION ${PROJECT_BINARY_DIR}/shaders/)
-file(COPY ${PROJECT_SOURCE_DIR}/src/textures/ DESTINATION ${PROJECT_BINARY_DIR}/textures/)

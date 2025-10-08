@@ -18,7 +18,13 @@ void main() {
     vec3 lightDirection = normalize(vec3(16.0f, 16.0f, 16.0f));
     float diffuse = max(dot(currentPos, lightDirection), 0.0f);
 
-    //FragColor = vec4(color, 1.0f);
-    //FragColor = (mix(texture(tex0, texCoord), texture(tex1, texCoord), mixer) + vec4(color, 1.0f))*diffuse;
-    FragColor = (mix(texture(tex0, texCoord), texture(tex1, texCoord), mixer) + vec4(color, 1.0f));
+    if(mixer < 0.5) {
+        FragColor = vec4(color, 1.0f);
+    }
+    else {
+        vec4 texture1 = texture(tex0, texCoord);
+        vec4 texture2 = texture(tex1, texCoord);
+        
+        FragColor = mix(texture1, texture2, 0.5);
+    }
 }
