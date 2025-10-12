@@ -14,15 +14,115 @@
 #include <fstream>
 #include <ctime>
 #include <cmath>
+#include <vector>
 
 float camX = 0.0f;
 float camY = 0.0f;
 float camZ = 5.0f;
 
+constexpr int NUM_CARS = 100;
+bool controlPlane = false;
+unsigned carSelector = 0;
 bool throttle = false;
 bool throttleR = false;
 bool spinLeft = false;
 bool spinRight = false;
+
+class Sphere
+{
+public:
+    Sphere(std::shared_ptr<SphereMesh> mesh) : m_mesh(mesh) {}
+
+    glm::mat4 getModel()
+    {
+        glm::mat4 model = glm::translate(glm::mat4{1.0f}, m_position);
+        model = glm::rotate(model, m_angle, m_rotation);
+        model = glm::scale(model, glm::vec3{m_size});
+        return model;
+    }
+
+    void update()
+    {
+        m_angle += 0.01f;
+        if (m_angle >= 360.0f)
+        {
+            m_angle = 0.0f;
+        }
+    }
+
+    void draw()
+    {
+        m_mesh->draw();
+    }
+
+private:
+    std::shared_ptr<SphereMesh> m_mesh = nullptr;
+    glm::vec3 m_position{0.0f, 0.0f, 0.0f};
+    glm::vec3 m_rotation{0.0f, 1.0f, 0.0f};
+    float m_size{ 1.0f };
+    float m_angle{ 0.0f };
+};
+
+class GlobeTransform
+{
+public:
+    GlobeTransform(float radius, float size, bool randomPos = false)
+        : m_position(glm::vec3{ 0.0f, 0.0f, radius }), m_size(size)
+    {
+        if (randomPos)
+        {
+            auto getRandom = [] {return (rand() - (RAND_MAX/2.0f)) / (1.0f*RAND_MAX); };
+            m_position = radius * glm::normalize(glm::vec3{ getRandom(), getRandom(), getRandom() });
+        }
+    }
+
+    glm::mat4 getModel()
+    {
+        const glm::vec3 forward = glm::normalize(-m_forward);
+        const glm::vec3 right = glm::normalize(glm::cross(m_position - m_origin, forward));
+        const glm::vec3 up = glm::cross(forward, right);
+
+        glm::mat4 rotation = glm::mat4(1.0f);
+        rotation[0] = glm::vec4(right, 0.0f);
+        rotation[1] = glm::vec4(forward, 0.0f);
+        rotation[2] = glm::vec4(up, 0.0f);
+
+        const glm::mat4 translation = glm::translate(glm::mat4{1.0f}, m_position);
+
+        const glm::mat4 scale = glm::scale(glm::mat4{1.0f}, glm::vec3{m_size});
+        
+        return translation * rotation * scale;
+    }
+
+    float getWheelAngle()
+    {
+        return m_wheelAngle;
+    }
+
+    void move(bool backwards = false)
+    {
+        const glm::vec3 rightVector = glm::normalize(glm::cross(m_forward, m_position - m_origin));
+        const glm::mat4 rotation = glm::rotate(glm::mat4{1.0f}, backwards ? -0.01f : 0.01f, rightVector);
+        m_position = rotation * glm::vec4(m_position, 1.0f);
+        m_forward = rotation * glm::vec4(m_forward, 1.0f);
+        backwards ? m_wheelAngle -= 3.0f : m_wheelAngle += 3.0f;
+    }
+
+    void yaw(bool right = false)
+    {
+        const float delta = right ? -0.03f : 0.03f;
+        const glm::vec3 up = glm::normalize(m_position - m_origin);
+        const glm::mat4 yawMat = glm::rotate(glm::mat4{1.0f}, delta, up);
+        m_forward = yawMat * glm::vec4(m_forward, 1.0f);
+    }
+
+private:
+    glm::vec3 m_position;
+    glm::vec3 m_forward{0.0f, 1.0f, 0.0f};
+    glm::vec3 m_origin{0.0f, 0.0f, 0.0f};
+    float m_size{ 0.15f };
+    float m_wheelAngle{ 0.0f };
+};
 
 static void error_callback(int error, const char* description)
 {
@@ -44,6 +144,11 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     if (key == GLFW_KEY_LEFT && action == GLFW_RELEASE) { spinLeft = false; }
     if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) { spinRight = true; }
     if (key == GLFW_KEY_RIGHT && action == GLFW_RELEASE) { spinRight = false; }
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) { controlPlane = !controlPlane; }
+    if (key == GLFW_KEY_C && action == GLFW_PRESS) { 
+        carSelector++;
+        if (carSelector >= NUM_CARS) { carSelector = 0; }
+    }
     
     if (key == GLFW_KEY_W && action == GLFW_PRESS) { camY += 1.0; }
     if (key == GLFW_KEY_S && action == GLFW_PRESS){ camY -= 1.0; }
@@ -82,7 +187,7 @@ void drawPlane(Shader& shader, const glm::mat4& model, std::shared_ptr<CylinderM
     }
 }
 
-void drawCar(Shader& shader, const glm::mat4& model, std::shared_ptr<CuboidMesh> cubeoid, std::shared_ptr<TorusMesh> torus) {
+void drawCar(Shader& shader, const glm::mat4& model, std::shared_ptr<CuboidMesh> cubeoid, std::shared_ptr<TorusMesh> torus, float angle) {
     const glm::mat4 bodyT = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
     const glm::mat4 bodyS = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.7f, 0.15f));
     shader.setModel(bodyT * bodyS);
@@ -92,9 +197,6 @@ void drawCar(Shader& shader, const glm::mat4& model, std::shared_ptr<CuboidMesh>
     const glm::mat4 cabinS = glm::scale(bodyS, glm::vec3(0.7f, 0.5f, 0.7f));
     shader.setModel(cabinT * cabinS);
     cubeoid->draw();
-
-    static float angle = 0.0f;
-    angle += 3.0f;
 
     const glm::mat4 leftFrontT = glm::translate(model, glm::vec3(-0.19f, 0.2f, 0.0f));
     const glm::mat4 leftFrontS = glm::scale(glm::mat4(1.0f), glm::vec3(0.15f, 0.15f, 0.15f));
@@ -159,14 +261,20 @@ int main()
     auto sphere = std::make_shared<SphereMesh>(20);
     auto torus = std::make_shared<TorusMesh>(40);
 
+    Sphere sphereObject{ sphere };
+    GlobeTransform planeTransform{ 1.2f, 0.25f };
+
+    std::vector<GlobeTransform> carTransforms;
+    for (int i = 0; i < NUM_CARS; ++i) {
+        carTransforms.emplace_back(1.02f, 0.3f);
+    }
+
     glEnable(GL_DEPTH_TEST);
 
     float mix = 0.0f;
     bool forward = true;
     float rotation = 0.0f;
     double prevTime = glfwGetTime();
-
-    glm::vec3 planeUp(0.0f, 0.0f, 1.0f);
 
     while (!glfwWindowShouldClose(window)) {
         int width, height;
@@ -184,73 +292,44 @@ int main()
             prevTime = crntTime;
         }
 
-        // Identity - render area is a unit cube
-        shader.use();
-        shader.setProjection(glm::mat4(1.0f));
-        shader.setView(glm::mat4(1.0f));
-        shader.setModel(glm::mat4(1.0f));
-        //circle->draw();
-
-        //Perspective - global coordiate system
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1080 / float(1080), 0.1f, 100.0f);
-        shader.setProjection(projection);
 
-        // Camera - rendered in camera space
         const glm::vec3 position = glm::vec3(camX, camY, camZ);
         const glm::vec3 orientation = glm::vec3(0.0f, 0.0f, -1.0f);
         const glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
         const glm::mat4 view = glm::lookAt(position, glm::vec3(0.0f), up);
+
+        shader.use();
+        shader.setProjection(projection);
         shader.setView(view);
 
-        // Model - per model transforms
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, -2.0f));
-        model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, -1.0f, 0.0f));
-        shader.setModel(model);
-
-        static bool barrelLeft = false;
-        static float barrelRot = 0.0f;
-        if (barrelLeft) {
-            barrelRot -= 0.005f;
+        if (throttle && !controlPlane && carSelector == 0) {
+            carTransforms[0].move();
         }
-        else {
-            barrelRot += 0.005f;
+        else if (throttleR && !controlPlane && carSelector == 0) {
+            carTransforms[0].move(true);
         }
-        if (barrelRot > 0.2f) {
-            barrelLeft = true;
+        for (int i = 1; i < NUM_CARS; ++i) {
+            carTransforms[i].move();
         }
-        else if (barrelRot < -0.2f) {
-            barrelLeft = false;
-        }
-        
-        static float planeAngle = 0.0f;
-        static float planeYaw = 0.0f;
-        if (throttle) {
-            planeAngle -= 0.5f;
-        }
-        else if (throttleR) {
-            planeAngle += 0.5f;
-        }
+       
+        planeTransform.move();
 
         if (spinLeft) {
-            planeYaw += 1.0f;
+            controlPlane ? planeTransform.yaw() : carTransforms[carSelector].yaw();
         }
         else if (spinRight) {
-            planeYaw -= 1.0f;
+            controlPlane ? planeTransform.yaw(true) : carTransforms[carSelector].yaw(true);
         }
-
-        glm::mat4 planeModel = glm::mat4(1.0f);
-        planeModel = glm::rotate(planeModel, glm::radians(planeYaw), planeUp);
-        planeModel = glm::rotate(planeModel, glm::radians(planeAngle), glm::vec3(1.0f, 0.0f, 0.0f));
-        planeModel = glm::translate(planeModel, glm::vec3(0.0f, 0.0f, 1.5f));
-        planeUp = glm::vec3(planeModel[2]);
+        auto planeModel = planeTransform.getModel();
+        shader.setModel(planeModel);
         drawPlane(shader, planeModel, cylinder, cone, cube);
 
-        glm::mat4 carModel = glm::mat4(1.0f);
-        carModel = glm::rotate(carModel, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        carModel = glm::rotate(carModel, glm::radians(-rotation * 2.5f), glm::vec3(1.0f, 0.0f, 1.0f));
-        carModel = glm::translate(carModel, glm::vec3(0.0f, 0.0f, 1.03f));
-        carModel = glm::scale(carModel, glm::vec3(0.5f, 0.5f, 0.5f));
-        drawCar(shader, carModel, cube, torus);
+        for (auto& carTransform : carTransforms) {
+            auto carModel = carTransform.getModel();
+            shader.setModel(carModel);
+            drawCar(shader, carModel, cube, torus, carTransform.getWheelAngle());
+        }
 
         flatShader.use();
         flatShader.setView(view);
@@ -264,14 +343,10 @@ int main()
             torus->draw();
         }
 
-        {
-            glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-            glm::mat4 R = glm::rotate(glm::mat4(1.0f), glm::radians(rotation * 1), glm::vec3(0.0f, 1.0f, 1.0f));
-            glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 10.0f, 10.0f));
-            flatShader.use();
-            flatShader.setModel(T * R);
-            sphere->draw();
-        }
+        auto sphereObjectModel = sphereObject.getModel();
+        flatShader.setModel(sphereObjectModel);
+        sphereObject.draw();
+        sphereObject.update();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
