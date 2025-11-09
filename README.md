@@ -9,14 +9,7 @@ cmake -DBUILD_DEMOS=ON ..
 cmake --build .
 ```
 #### Core shapes library:
-![sphere](img/sphere.gif)
-![torus](img/torus.gif)
-![starTorus](img/starTorus.gif)
-![circle](img/circle.gif)
-![cone](img/cone.gif)
-![cylinder](img/cylinder.gif)
+![sphere](img/sphere.gif)![torus](img/torus.gif)![starTorus](img/starTorus.gif)![circle](img/circle.gif)![cone](img/cone.gif)![cylinder](img/cylinder.gif)
 
 #### Demos:
-
-
-![polar](img/polar.gif)
+![polar](img/polar.gif)![polar](img/polar2.gif)
