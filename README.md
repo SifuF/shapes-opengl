@@ -5,7 +5,7 @@ Building:
 ```
 git submodule update --init --recursive
 mkdir build && cd build
-cmake -DBUILD_DEMOS=ON ..
+cmake -DBUILD_DEMO_APPS=ON ..
 cmake --build .
 ```
 #### Core shapes library:
