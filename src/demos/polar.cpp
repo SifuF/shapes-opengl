@@ -16,10 +16,6 @@
 #include <cmath>
 #include <vector>
 
-float camX = 0.0f;
-float camY = 0.0f;
-float camZ = 5.0f;
-
 constexpr int NUM_CARS = 100;
 bool controlPlane = false;
 unsigned carSelector = 0;
@@ -27,6 +23,20 @@ bool throttle = false;
 bool throttleR = false;
 bool spinLeft = false;
 bool spinRight = false;
+
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 5.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
+float lastX = 400;
+float lastY = 300;
+float yaw = -90.0f;
+float pitch = 0.0f;
+float roll = 0.0f;
+bool firstMouse = true;
+float fov = 45.0f;
 
 class Sphere
 {
@@ -129,12 +139,55 @@ static void error_callback(int error, const char* description)
     fprintf(stderr, "Error: %s\n", description);
 }
 
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos;
+    lastX = xpos;
+    lastY = ypos;
+
+    float sensitivity = 0.1f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw += xoffset;
+    pitch += yoffset;
+
+    if (pitch > 89.0f)
+        pitch = 89.0f;
+    if (pitch < -89.0f)
+        pitch = -89.0f;
+
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(direction);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    fov -= (float)yoffset;
+    if (fov < 1.0f)
+        fov = 1.0f;
+    if (fov > 45.0f)
+        fov = 45.0f;
+}
+
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
+    const float cameraSpeed = 2.5f * deltaTime;
 
     if (key == GLFW_KEY_UP && action == GLFW_PRESS) { throttle = true; }
     if (key == GLFW_KEY_UP && action == GLFW_RELEASE) { throttle = false; }
@@ -149,13 +202,23 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         carSelector++;
         if (carSelector >= NUM_CARS) { carSelector = 0; }
     }
-    
-    if (key == GLFW_KEY_W && action == GLFW_PRESS) { camY += 1.0; }
-    if (key == GLFW_KEY_S && action == GLFW_PRESS){ camY -= 1.0; }
-    if (key == GLFW_KEY_A && action == GLFW_PRESS) { camX -= 1.0; }
-    if (key == GLFW_KEY_D && action == GLFW_PRESS) { camX += 1.0; }
-    if (key == GLFW_KEY_Z && action == GLFW_PRESS) { camZ -= 1.0; }
-    if (key == GLFW_KEY_X && action == GLFW_PRESS) { camZ += 1.0; }
+}
+
+void processInput(GLFWwindow* window)
+{
+    float cameraSpeed = 2.5f * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        cameraPos += cameraSpeed * cameraUp;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        cameraPos -= cameraSpeed * cameraUp;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        cameraPos -= cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        cameraPos += cameraSpeed * cameraFront;
 }
 
 void drawPlane(Shader& shader, const glm::mat4& model, std::shared_ptr<CylinderMesh> cylinder, std::shared_ptr<ConeMesh> cone, std::shared_ptr<CuboidMesh> cube) {
@@ -248,6 +311,9 @@ int main()
     glfwMakeContextCurrent(window);
     glfwSetErrorCallback(error_callback);
     glfwSetKeyCallback(window, key_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
     glfwSwapInterval(1);
 
     gladLoadGL();
@@ -277,6 +343,8 @@ int main()
     double prevTime = glfwGetTime();
 
     while (!glfwWindowShouldClose(window)) {
+        processInput(window);
+
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
         glViewport(0, 0, width, height);
@@ -292,12 +360,13 @@ int main()
             prevTime = crntTime;
         }
 
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1080 / float(1080), 0.1f, 100.0f);
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
 
-        const glm::vec3 position = glm::vec3(camX, camY, camZ);
-        const glm::vec3 orientation = glm::vec3(0.0f, 0.0f, -1.0f);
-        const glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-        const glm::mat4 view = glm::lookAt(position, glm::vec3(0.0f), up);
+        glm::mat4 projection = glm::perspective(glm::radians(fov), 1080 / float(1080), 0.1f, 100.0f);
+        
+        const glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
         shader.use();
         shader.setProjection(projection);
