@@ -8,8 +8,11 @@ in vec2 texCoord;
 in vec3 normCoord;
 in vec3 currentPos;
 
-uniform float mixer;
+uniform float ambient;
+uniform vec3 lightPos;  
 
 void main() {
-    FragColor = vec4(color, 1.0f);
+    float light = 1.0 - abs(normalize(lightPos).x);
+    //float light = 1.0;
+    FragColor = vec4(ambient*light*color, 1.0f);
 }

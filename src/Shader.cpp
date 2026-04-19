@@ -68,9 +68,14 @@ void Shader::setScale(GLfloat val) const {
     glUniform1f(location, val);
 }
 
-void Shader::setMixer(GLfloat val) const {
-    GLuint uniMixer = glGetUniformLocation(program, "mixer");
+void Shader::setAmbient(GLfloat val) const {
+    GLuint uniMixer = glGetUniformLocation(program, "ambient");
     glUniform1f(uniMixer, val);
+}
+
+void Shader::setVec3(const char* name, glm::vec3 value) const {
+    GLuint uniMixer = glGetUniformLocation(program, name);
+    glUniform3f(uniMixer, value.x, value.y, value.z);
 }
 
 std::string Shader::get_file_contents(const char* filename) const

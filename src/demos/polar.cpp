@@ -38,6 +38,9 @@ float roll = 0.0f;
 bool firstMouse = true;
 float fov = 45.0f;
 
+glm::vec3 lightPos(1.5f, 1.5f, 0.0f);
+bool lightLeft = true;
+
 class Sphere
 {
 public:
@@ -320,6 +323,7 @@ int main()
 
     Shader shader("../src/shaders/default.vert", "../src/shaders/default.frag");
     Shader flatShader("../src/shaders/flat.vert", "../src/shaders/flat.frag");
+    Shader lightShader("../src/shaders/light.vert", "../src/shaders/light.frag");
 
     auto cube = std::make_shared<CuboidMesh>(1.0f, 1.0f, 1.0f);
     auto cone = std::make_shared<ConeMesh>(20);
@@ -352,7 +356,6 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shader.setScale(0.5f); // debug
-        shader.setMixer(mix); // debug
         
         double crntTime = glfwGetTime();
         if (crntTime - prevTime >= 1 / 60) {
@@ -363,6 +366,20 @@ int main()
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
+        if (lightLeft) {
+            lightPos.x -= 0.01f;
+        }
+        else {
+            lightPos.x += 0.01f;
+        }
+        if (lightPos.x < -1.5f) {
+            lightLeft = false;
+        }
+        if (lightPos.x > 1.5f) {
+            lightLeft = true;
+        }
+
 
         glm::mat4 projection = glm::perspective(glm::radians(fov), 1080 / float(1080), 0.1f, 100.0f);
         
@@ -403,19 +420,33 @@ int main()
         flatShader.use();
         flatShader.setView(view);
         flatShader.setProjection(projection);
+        flatShader.setVec3("lightPos", lightPos);
         {
             glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(10.0f, 0.0f, -10.0f));
             glm::mat4 R = glm::rotate(glm::mat4(1.0f), glm::radians(rotation * 0.05f), glm::vec3(0.0f, 0.0f, 1.0f));
             glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(20.0f, 20.0f, 20.0f));
             flatShader.use();
             flatShader.setModel(T * R * S);
+            flatShader.setAmbient(0.4f);
             torus->draw();
         }
 
         auto sphereObjectModel = sphereObject.getModel();
         flatShader.setModel(sphereObjectModel);
+        flatShader.setAmbient(1.0f);
         sphereObject.draw();
         sphereObject.update();
+
+        {
+            glm::mat4 T = glm::translate(glm::mat4(1.0f), lightPos);
+            glm::mat4 R = glm::mat4(1.0f);
+            glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(0.2f, 0.2f, 0.2f));
+            lightShader.use();
+            lightShader.setView(view);
+            lightShader.setProjection(projection);
+            lightShader.setModel(T * R * S);
+            sphere->draw();
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();

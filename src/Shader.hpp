@@ -28,7 +28,9 @@ public:
 
     void setScale(GLfloat val) const;
 
-    void setMixer(GLfloat val) const;
+    void setAmbient(GLfloat val) const;
+
+    void setVec3(const char* name, glm::vec3 value) const;
 
     std::string get_file_contents(const char* filename) const;
 
